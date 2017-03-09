@@ -1,0 +1,73 @@
+Created by Clint Cherrington 18th October, 2016
+
+Installing Laravel on your Digital Ocean Droplet.
+
+First we need to create a new droplet via Digital Ocean, Look for the LAMP 14.04 one click app and create it.
+Next we will SSH into this newly created droplet. Your username by default will be root and digital ocean will email you your password.
+
+Next once you have successfully SSH'ed into your server we will need to ensure everything is updated
+sudo apt-get update
+sudo apt-get dist-upgrade
+
+Next we will want to enable Apache mod_rewrite module
+sudo a2enmod rewrite
+
+Now we will install composer so we can pull in all of laravels dependencies
+curl -sS https://getcomposer.org/installer | php
+mv composer.phar /usr/local/bin/composer
+
+Next we will install MCrypt for PHP5
+sudo apt-get install mcrypt php5-mcrypt
+sudo php5enmod mcrypt
+
+Now restart Apache
+sudo service apache2 restart
+
+Now we will sort out our Mcrypt files so they point to all the right locations
+sudo updatedb 
+locate mcrypt.ini (Should show it located at /etc/php5/mods-available)
+locate mcrypt.so (Should show it located at /usr/lib/php5/20121212/mcrypt.so)
+
+Now we want to edit the mcrypt.ini file and change the extension to match the path to mcrypt.so
+(extension=/usr/lib/php5/20121212/mcrypt.so) for example
+now run
+sudo php5enmod mcrypt
+
+Verify files exist
+ls -al /etc/php5/cli/conf.d/20-mcrypt.ini
+ls -al /etc/php5/apache2/conf.d/20-mcrypt.ini
+
+Now restart Apache
+sudo service apache2 restart
+
+Now restart php5 or php5-fpm
+sudo service php5 restart
+
+Now we want to install Laravel onto our server
+first run the following to eliminate the memory issue..
+sudo dd if=/dev/zero of=/swapfile bs=1024 count=512k
+mkswap /swapfile
+swapon /swapfile
+
+Next cd into your root folder
+cd /var/www/
+
+now run
+composer create-project --prefer-dist laravel/laravel PROJECTNAME "5.2.*"
+
+go into your www folder and change the permissions
+sudo chmod -R gu+w www
+sudo chmod -R guo+w www
+
+Now we will want to change the root directory to point to the correct place
+find the /etc/apache2/sites-enabled/000-default file and nano into it
+
+now edit the file and change the DocumentRoot to:
+/var/www/PROJECTNAME/public
+
+Now change the Directory to /var/www/PROJECTNAME
+
+Now restart your Apache once more
+sudo service apache2 restart
+
+NOW YOUR LARAVEL PROJECT IS UP AND RUNNING - GOTO YOUR IP URL AND CHECK IT OUT!!!
